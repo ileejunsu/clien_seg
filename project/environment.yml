@@ -1,17 +1,20 @@
 name: my_streamlit_app  # You can customize the environment name
 channels:
+  - conda-forge 
   - defaults
 dependencies:
-  - python=3.9
+  - python=3.9  # Replace with your desired Python version if needed
   - pip
   - numpy==1.26.4
-  - pandas 
+  - pandas
+  - uv
 
 pip:
   - streamlit>=1.28
   - scikit-learn
   - plotly
   - pyspark
+  
 
 variables:
   JAVA_HOME: /usr/lib/jvm/java-17-openjdk-amd64  
@@ -19,4 +22,4 @@ variables:
   PYSPARK_PYTHON: python3
   PYSPARK_DRIVER_PYTHON: python3
   PATH: $JAVA_HOME/bin:$SPARK_HOME/bin:$PATH
-  LD_LIBRARY_PATH: $JAVA_HOME/lib/server:$LD_LIBRARY_PATH 
+  LD_LIBRARY_PATH: $JAVA_HOME/lib/server:$LD_LIBRARY_PATH
