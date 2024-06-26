@@ -17,7 +17,7 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 # Set Java home
-java_home = "/usr/lib/jvm/java-11-openjdk-amd64"
+java_home = os.environ.get('JAVA_HOME', '/usr/lib/jvm/java-11-openjdk-amd64')
 os.environ['JAVA_HOME'] = java_home
 logger.info(f"JAVA_HOME set to: {java_home}")
 
@@ -49,7 +49,7 @@ except Exception as e:
     logger.error(f"Unhandled exception during Spark initialization: {str(e)}")
     st.error(f"An unexpected error occurred: {str(e)}")
     sys.exit(1)
-        
+
 # Load data from Parquet
 @st.cache_data
 def load_data():
