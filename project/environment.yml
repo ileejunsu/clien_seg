@@ -8,6 +8,7 @@ dependencies:
   - pip
   - numpy=1.26.4
   - pandas=2.1.4
+  - procps-ng  # This package provides the 'ps' command
   - pip:
     - streamlit==1.28.0
     - pyspark==3.5.0

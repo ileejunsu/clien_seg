@@ -17,14 +17,19 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 # Set Java home
-java_home = os.environ.get('JAVA_HOME', '/usr/lib/jvm/java-11-openjdk-amd64')
+java_home = "/usr/lib/jvm/java-11-openjdk-amd64"
 os.environ['JAVA_HOME'] = java_home
 logger.info(f"JAVA_HOME set to: {java_home}")
+
 
 # Initialize SparkSession
 @st.cache_resource
 def get_spark_session():
     try:
+        # Add these lines to help debug
+        logger.info(f"Current PATH: {os.environ.get('PATH', 'Not set')}")
+        logger.info(f"Current LD_LIBRARY_PATH: {os.environ.get('LD_LIBRARY_PATH', 'Not set')}")
+        
         spark = SparkSession.builder \
             .appName("CustomerSegmentation") \
             .config("spark.driver.extraJavaOptions", "-Xss4M") \
@@ -44,7 +49,7 @@ except Exception as e:
     logger.error(f"Unhandled exception during Spark initialization: {str(e)}")
     st.error(f"An unexpected error occurred: {str(e)}")
     sys.exit(1)
-    
+        
 # Load data from Parquet
 @st.cache_data
 def load_data():
