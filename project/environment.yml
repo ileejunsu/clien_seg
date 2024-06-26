@@ -1,10 +1,10 @@
-name: my_streamlit_app  # You can customize the environment name
+name: my_streamlit_app
 channels:
-  - conda-forge 
+  - conda-forge
   - defaults
 dependencies:
-  - python=3.9  # Replace with your desired Python version if needed
-  - pip
+  - python=3.9
+  - pip  
   - numpy==1.26.4
   - pandas
 
