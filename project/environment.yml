@@ -1,20 +1,22 @@
-name: my_streamlit_app
+name: my_streamlit_app  # You can customize the environment name
 channels:
   - defaults
 dependencies:
-  - python=3.9 # Replace with your desired Python version if different
+  - python=3.9
   - pip
-  - pip:
-    - streamlit
-    - pandas==1.5.3
-    - scikit-learn==1.2.2
-    - plotly==5.15.0
-    - pyspark==3.4.2  # Or the latest compatible version
+  - numpy==1.26.4
+  - pandas 
+
+pip:
+  - streamlit>=1.28
+  - scikit-learn
+  - plotly
+  - pyspark
 
 variables:
   JAVA_HOME: /usr/lib/jvm/java-17-openjdk-amd64  
-  SPARK_HOME: /opt/spark  # Adjust if using a custom Spark installation
+  SPARK_HOME: /opt/spark 
   PYSPARK_PYTHON: python3
   PYSPARK_DRIVER_PYTHON: python3
   PATH: $JAVA_HOME/bin:$SPARK_HOME/bin:$PATH
-  LD_LIBRARY_PATH: $JAVA_HOME/lib/server:$LD_LIBRARY_PATH  # For Spark to find Java libraries
+  LD_LIBRARY_PATH: $JAVA_HOME/lib/server:$LD_LIBRARY_PATH 
