@@ -22,3 +22,5 @@ variables:
   PYSPARK_DRIVER_PYTHON: python3
   PATH: $JAVA_HOME/bin:$SPARK_HOME/bin:$PATH
   LD_LIBRARY_PATH: $JAVA_HOME/lib/server:$LD_LIBRARY_PATH
+  # Add this line to enforce pip usage:
+  STREAMLIT_DEPENDENCY_MANAGER: "pip" 
