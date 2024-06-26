@@ -57,14 +57,6 @@ def setup_java():
 # Call the function to set up Java
 java_home = setup_java()
 
-"""if java_home:
-    # Print Java version for verification
-    st.write("Java version:")
-    st.code(os.popen("java -version 2>&1").read())
-else:
-    st.error("Failed to set up Java. The app may not function correctly.")"""
-
-
 # Set up logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
