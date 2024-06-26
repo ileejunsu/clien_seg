@@ -22,14 +22,14 @@ def setup_java():
     java_dir = "jdk-11.0.2"
 
     if not os.path.exists(java_dir):
-        st.info("Downloading and setting up Java. This may take a few minutes...")
+        #st.info("Downloading and setting up Java. This may take a few minutes...")
         
         # Download Java
         try:
             if shutil.which('wget'):
                 os.system(f"wget {java_url}")
             else:
-                st.warning("wget not found. Using urllib for download.")
+                #st.warning("wget not found. Using urllib for download.")
                 urllib.request.urlretrieve(java_url, java_tar)
         except Exception as e:
             st.error(f"Failed to download Java: {str(e)}")
@@ -51,7 +51,7 @@ def setup_java():
     os.environ["JAVA_HOME"] = java_home
     os.environ["PATH"] = f"{java_home}/bin:{os.environ['PATH']}"
 
-    st.success("Java setup completed successfully.")
+    #st.success("Java setup completed successfully.")
     return java_home
 
 # Call the function to set up Java
@@ -59,7 +59,7 @@ java_home = setup_java()
 
 if java_home:
     # Print Java version for verification
-    st.write("Java version:")
+    #st.write("Java version:")
     st.code(os.popen("java -version 2>&1").read())
 else:
     st.error("Failed to set up Java. The app may not function correctly.")
