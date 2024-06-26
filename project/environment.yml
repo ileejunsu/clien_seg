@@ -7,6 +7,7 @@ dependencies:
   - pip
   - numpy=1.26.4
   - pandas=2.1.4
+  - openjdk=11
   - pip:
     - streamlit==1.28.0
     - scikit-learn==1.3.2
@@ -14,8 +15,8 @@ dependencies:
     - pyspark==3.5.0
 
 variables:
-  JAVA_HOME: /usr/lib/jvm/java-17-openjdk-amd64
-  SPARK_HOME: /opt/spark
+  JAVA_HOME: $PREFIX
+  SPARK_HOME: $PREFIX
   PYSPARK_PYTHON: python3
   PYSPARK_DRIVER_PYTHON: python3
   PATH: $JAVA_HOME/bin:$SPARK_HOME/bin:$PATH
