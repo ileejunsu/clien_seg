@@ -1,0 +1,51 @@
+# Python
+*.pyc
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Virtual Environments
+.venv
+venv/
+env/
+ENV/
+
+# Data files
+*.csv
+*.parquet
+*.json
+*.feather
+*.h5
+data/
+
+# Jupyter Notebook
+.ipynb_checkpoints
+
+# Streamlit (Uncomment if you want to track Streamlit configuration)
+#.streamlit/
+
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Environment (Sensitive data, NEVER commit!)
+.env
+
+# IDEs and Editors
+.vscode/
+.idea/
+
+# PyCharm
+.pytest_cache/
+ 
+# Large data files or directories you might want to exclude
+*.pkl
+*.joblib
+
+# Other
+# Add any other specific files or directories you want to ignore here
