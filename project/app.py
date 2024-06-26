@@ -9,16 +9,42 @@ import plotly.express as px
 from pyspark.sql import SparkSession
 from pyspark.sql.functions import col, datediff, to_date, lit, max
 import os
+import logging
+import sys
 
-os.environ['JAVA_HOME'] = os.environ.get('CONDA_PREFIX', '/usr/lib/jvm/java-11-openjdk-amd64')
+# Set up logging
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
+
+# Set Java home
+java_home = os.environ.get('JAVA_HOME', '/usr/lib/jvm/java-11-openjdk-amd64')
+os.environ['JAVA_HOME'] = java_home
+logger.info(f"JAVA_HOME set to: {java_home}")
 
 # Initialize SparkSession
 @st.cache_resource
 def get_spark_session():
-    return SparkSession.builder.appName("CustomerSegmentation").getOrCreate()
+    try:
+        spark = SparkSession.builder \
+            .appName("CustomerSegmentation") \
+            .config("spark.driver.extraJavaOptions", "-Xss4M") \
+            .config("spark.executor.extraJavaOptions", "-Xss4M") \
+            .getOrCreate()
+        logger.info("SparkSession created successfully")
+        return spark
+    except Exception as e:
+        logger.error(f"Error creating SparkSession: {str(e)}")
+        st.error(f"Failed to initialize Spark: {str(e)}")
+        sys.exit(1)
 
-spark = get_spark_session()
-
+try:
+    spark = get_spark_session()
+    logger.info("Spark initialization completed")
+except Exception as e:
+    logger.error(f"Unhandled exception during Spark initialization: {str(e)}")
+    st.error(f"An unexpected error occurred: {str(e)}")
+    sys.exit(1)
+    
 # Load data from Parquet
 @st.cache_data
 def load_data():
