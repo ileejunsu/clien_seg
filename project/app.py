@@ -1,4 +1,6 @@
+import os
 import streamlit as st
+import tarfile
 import pandas as pd
 from sklearn.cluster import KMeans, BisectingKMeans
 from sklearn.mixture import GaussianMixture
@@ -8,16 +10,46 @@ from sklearn.metrics import silhouette_score
 import plotly.express as px
 from pyspark.sql import SparkSession
 from pyspark.sql.functions import col, datediff, to_date, lit, max
-import os
 import logging
 import sys
+
+@st.cache_resource
+def setup_java():
+    java_url = "https://download.java.net/java/GA/jdk11/9/GPL/openjdk-11.0.2_linux-x64_bin.tar.gz"
+    java_tar = "openjdk-11.0.2_linux-x64_bin.tar.gz"
+    java_dir = "jdk-11.0.2"
+
+    if not os.path.exists(java_dir):
+        # Download Java
+        os.system(f"wget {java_url}")
+        
+        # Extract Java
+        with tarfile.open(java_tar, "r:gz") as tar:
+            tar.extractall()
+        
+        # Clean up the tar file
+        os.remove(java_tar)
+
+    # Set JAVA_HOME and update PATH
+    java_home = os.path.abspath(java_dir)
+    os.environ["JAVA_HOME"] = java_home
+    os.environ["PATH"] = f"{java_home}/bin:{os.environ['PATH']}"
+
+    return java_home
+
+# Call the function to set up Java
+java_home = setup_java()
+
+# Print Java version for verification
+st.write("Java version:")
+st.code(os.popen("java -version 2>&1").read())
+
+
 
 # Set up logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-# Set Java home
-java_home = os.environ.get('JAVA_HOME', '/usr/lib/jvm/java-11-openjdk-amd64')
 os.environ['JAVA_HOME'] = java_home
 logger.info(f"JAVA_HOME set to: {java_home}")
 
