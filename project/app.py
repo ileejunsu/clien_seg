@@ -104,7 +104,7 @@ except Exception as e:
 # Load data from Parquet
 @st.cache_data
 def load_data():
-    df_features = spark.read.parquet("df_features.parquet")
+    df_features = spark.read.parquet("project/df_features.parquet")
     reference_date = df_features.agg(max("LastPurchasesDate")).collect()[0][0]
     reference_date_lit = lit(reference_date)
     df_features = df_features.withColumn("DaysSinceLastPurchase", datediff(to_date(reference_date_lit), "LastPurchasesDate"))
