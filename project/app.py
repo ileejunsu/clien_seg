@@ -8,6 +8,9 @@ from sklearn.metrics import silhouette_score
 import plotly.express as px
 from pyspark.sql import SparkSession
 from pyspark.sql.functions import col, datediff, to_date, lit, max
+import os
+
+os.environ['JAVA_HOME'] = os.environ.get('CONDA_PREFIX', '/usr/lib/jvm/java-11-openjdk-amd64')
 
 # Initialize SparkSession
 @st.cache_resource
