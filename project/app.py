@@ -113,7 +113,12 @@ def load_data():
 df_features = load_data()
 
 def plot_silhouette_score(silhouette, algorithm, k, df_pca, features_for_clustering):
-    """Displays the silhouette score as a metric and a plot for multiple k values."""
+    """
+    Displays the silhouette score as a metric and a plot with a red dot for the current k.
+
+    This function calculates silhouette scores for multiple cluster numbers (k)
+    and displays them in a line plot. It highlights the score for the current k value.
+    """
     st.subheader(f"Silhouette Score ({algorithm})")
     st.info(
         "The Silhouette Score measures how similar an object is to its own cluster "
@@ -121,9 +126,8 @@ def plot_silhouette_score(silhouette, algorithm, k, df_pca, features_for_cluster
         "indicates that the object is well matched to its own cluster and poorly "
         "matched to neighboring clusters."
     )
-    st.metric("Score (for k={})".format(k), round(silhouette, 3)) 
 
-    # Calculate silhouette scores for multiple cluster counts (optional)
+    # Calculate silhouette scores for multiple cluster counts 
     silhouette_scores = []
     for i in range(2, 11):  # Adjust range as needed
         if algorithm == "K-means":
@@ -137,14 +141,39 @@ def plot_silhouette_score(silhouette, algorithm, k, df_pca, features_for_cluster
         silhouette_scores.append(silhouette_avg)
 
     # Create the plot
-    fig = px.line(x=list(range(2, 11)), y=silhouette_scores, title="Silhouette Scores for Different Cluster Counts")
-    fig.update_traces(mode='markers+lines')  # Show both markers and a line
-    fig.update_layout(
-        xaxis_title="Number of Clusters (k)", 
-        yaxis_title="Silhouette Score",
-        xaxis=dict(tickmode='linear', tick0=2, dtick=1)  # Force integer ticks starting from 2
+    fig = px.line(
+        x=list(range(2, 11)),
+        y=silhouette_scores,
+        title="Silhouette Scores for Different Cluster Counts",
+        labels={"x": "Number of Clusters (k)", "y": "Silhouette Score"}
     )
-    st.plotly_chart(fig)  
+
+    # Add red dot and annotation for current k
+    fig.add_trace(
+        go.Scatter(
+            x=[k],
+            y=[silhouette],
+            mode='markers',
+            marker=dict(color='red', size=10),
+            name=f"Current Score (k={k})"
+        )
+    )
+    fig.update_traces(marker=dict(size=8))  # Adjust the size of all markers
+    fig.add_annotation(
+        x=k,
+        y=silhouette,
+        text=f"Current Score: {silhouette:.3f}",  # Format score to 3 decimal places
+        showarrow=True,
+        arrowhead=1,
+        ax=-20,  # Adjust annotation arrow length
+        ay=-20
+    )
+
+    fig.update_layout(
+        xaxis=dict(tickmode='linear', tick0=2, dtick=1),  # Ensure integer ticks on x-axis
+        legend=dict(yanchor="top", y=0.99, xanchor="left", x=0.01)  # Position legend
+    )
+    st.plotly_chart(fig, use_container_width=True)  # Display the plot
 
 def main():
     st.title("Interactive Customer Segmentation")
