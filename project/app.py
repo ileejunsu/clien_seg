@@ -10,6 +10,7 @@ from sklearn.preprocessing import StandardScaler
 from sklearn.decomposition import PCA
 from sklearn.metrics import silhouette_score
 import plotly.express as px
+import plotly.graph_objects as go
 from pyspark.sql import SparkSession
 from pyspark.sql.functions import col, datediff, to_date, lit, max
 import logging
@@ -304,11 +305,11 @@ def main():
                 st.info("These histograms show the distribution of each feature within this cluster. The shape of these distributions can reveal important characteristics of the cluster.")
                 # Create a multiselect box for feature selection
                 selected_features = st.multiselect("Select features to display:", features_to_use, default=[features_to_use[0]])
-                
+
                 if selected_features:
                     # Create the figure
                     fig = go.Figure()
-                
+
                     for feature in selected_features:
                         fig.add_trace(go.Histogram(
                             x=cluster_data[feature],
@@ -316,7 +317,7 @@ def main():
                             opacity=0.7,
                             nbinsx=30
                         ))
-                
+
                     # Update layout for better readability
                     fig.update_layout(
                         barmode='overlay',
@@ -326,11 +327,11 @@ def main():
                         legend_title="Features",
                         height=500,  # You can adjust this value
                     )
-                
+
                     # Update axes to automatically zoom and fit the data
                     fig.update_xaxes(autorange=True)
                     fig.update_yaxes(autorange=True)
-                
+
                     # Display the plot
                     st.plotly_chart(fig, use_container_width=True)
                 else:
