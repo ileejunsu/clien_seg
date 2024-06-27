@@ -287,15 +287,16 @@ def main():
         
                 # Summary statistics
                 st.info("This table shows summary statistics for each feature within this cluster. Compare these values to other clusters to understand what makes this segment unique.")
-                # Calculate summary statistics
+               # Calculate summary statistics
                 cluster_stats = cluster_data[features_to_use].describe()
                 
-                # Round all values to integers
-                cluster_stats = cluster_stats.round(0).astype(int)
-                
+                # Replace NaN with 0 and round to integers
+                cluster_stats = cluster_stats.fillna(0).round(0).astype(int)
+
+
                 # Transpose the dataframe for display
                 cluster_stats = cluster_stats.transpose()
-                
+
                 st.table(cluster_stats)
         
                 # Visualize distributions
