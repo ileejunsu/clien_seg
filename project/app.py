@@ -104,7 +104,7 @@ def load_data():
     reference_date = df_features.agg(max("LastPurchasesDate")).collect()[0][0]
     reference_date_lit = lit(reference_date)
     df_features = df_features.withColumn("DaysSinceLastPurchase", datediff(to_date(reference_date_lit), "LastPurchasesDate"))
-    df_features = df_features.withColumn("DaysSinceFirstPurchase", datediff(to_date(reference_date_lit), "FirstPurchasesDate"))
+    df_features = df_features.withColumn("DaysSinceFirsoitPurchase", datediff(to_date(reference_date_lit), "FirstPurchasesDate"))
     df_features = df_features.drop("LastPurchasesDate", "FirstPurchasesDate")
     
     # Convert to Pandas DataFrame before returning
@@ -318,26 +318,30 @@ def main():
 
                 if selected_features:
                     fig = go.Figure()
-
+                
                     for feature in selected_features:
                         # Normalize the data
                         data = cluster_data[feature]
-                        data_norm = (data - data.min()) / (data.max() - data.min())
-
-                        # Calculate kernel density estimation
-                        kde = stats.gaussian_kde(data_norm)
-                        x_range = np.linspace(0, 1, 1000)
-                        y_kde = kde(x_range)
-
-                        # Add line trace
-                        fig.add_trace(go.Scatter(
-                            x=x_range,
-                            y=y_kde,
-                            mode='lines',
-                            name=feature,
-                            line=dict(width=2)
-                        ))
-
+                        
+                        if data.nunique() > 1:
+                            data_norm = (data - data.min()) / (data.max() - data.min())
+                            
+                            # Calculate kernel density estimation
+                            kde = stats.gaussian_kde(data_norm)
+                            x_range = np.linspace(0, 1, 1000)
+                            y_kde = kde(x_range)
+                
+                            # Add line trace
+                            fig.add_trace(go.Scatter(
+                                x=x_range,
+                                y=y_kde,
+                                mode='lines',
+                                name=feature,
+                                line=dict(width=2)
+                            ))
+                        else:
+                            st.warning(f"Feature '{feature}' has only one unique value and cannot be plotted.")
+                
                     # Update layout for better readability
                     fig.update_layout(
                         title="Distribution of Selected Features (Normalized)",
@@ -347,16 +351,17 @@ def main():
                         height=500,
                         hovermode="x unified"
                     )
-
+                
                     # Update axes to automatically zoom and fit the data
                     fig.update_xaxes(range=[0, 1])
                     fig.update_yaxes(title_text="Density")
-
-                    # Display the plot
-                    st.plotly_chart(fig, use_container_width=True)
-
-                    # Add a note about normalization
-                    st.info("Note: Feature values have been normalized to a 0-1 scale for comparison. The lines represent the probability density function for each feature.")
+                
+                    # Display the plot only if there are traces
+                    if len(fig.data) > 0:
+                        st.plotly_chart(fig, use_container_width=True)
+                        st.info("Note: Feature values have been normalized to a 0-1 scale for comparison. The lines represent the probability density function for each feature.")
+                    else:
+                        st.warning("No features could be plotted. All selected features have only one unique value.")
                 else:
                     st.warning("Please select at least one feature to display.")
 
