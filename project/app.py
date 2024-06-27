@@ -11,6 +11,7 @@ from sklearn.decomposition import PCA
 from sklearn.metrics import silhouette_score
 import plotly.express as px
 import plotly.graph_objects as go
+from plotly.subplots import make_subplots
 from pyspark.sql import SparkSession
 from pyspark.sql.functions import col, datediff, to_date, lit, max
 import logging
@@ -301,47 +302,55 @@ def main():
                 st.table(cluster_stats)
         
                 # Visualize distributions
+                # Inside your cluster tab loop:
                 st.write("Distribution of Features:")
-                st.info("Select features from the multiselect box to view their distributions within this cluster. The graph will automatically adjust to fit the selected features.")
+                st.info("Select features from the multiselect box to view their distributions within this cluster.")
 
                 # Create a multiselect box for feature selection with a unique key
                 selected_features = st.multiselect(
                     "Select features to display:",
                     features_to_use,
                     default=[features_to_use[0]],
-                    key=f"feature_select_{cluster_id}"  # Add this line to create a unique key
+                    key=f"feature_select_{cluster_id}"
                 )
-                
+
                 if selected_features:
-                    # Create the figure
-                    fig = go.Figure()
-                
-                    for feature in selected_features:
-                        fig.add_trace(go.Histogram(
+                    # Create subplots, one for each selected feature
+                    fig = make_subplots(rows=len(selected_features), cols=1, 
+                                        subplot_titles=selected_features,
+                                        vertical_spacing=0.05)
+
+                    for i, feature in enumerate(selected_features, start=1):
+                        # Create histogram trace
+                        trace = go.Histogram(
                             x=cluster_data[feature],
                             name=feature,
-                            opacity=0.7,
-                            nbinsx=30
-                        ))
-                
+                            nbinsx=30,
+                            showlegend=False
+                        )
+
+                        # Add trace to the appropriate subplot
+                        fig.add_trace(trace, row=i, col=1)
+
+                        # Update x-axis label
+                        fig.update_xaxes(title_text=feature, row=i, col=1)
+
                     # Update layout for better readability
                     fig.update_layout(
-                        barmode='overlay',
-                        title="Distribution of Selected Features",
-                        xaxis_title="Value",
-                        yaxis_title="Count",
-                        legend_title="Features",
-                        height=500,  # You can adjust this value
+                        height=300 * len(selected_features),  # Adjust height based on number of features
+                        title_text="Distribution of Selected Features",
+                        showlegend=False,
                     )
-                
-                    # Update axes to automatically zoom and fit the data
-                    fig.update_xaxes(autorange=True)
-                    fig.update_yaxes(autorange=True)
-                
+
+                    # Update y-axes to show count
+                    fig.update_yaxes(title_text="Count")
+
                     # Display the plot
                     st.plotly_chart(fig, use_container_width=True)
                 else:
                     st.warning("Please select at least one feature to display.")
+
+                    
         # Evaluate Clustering (Silhouette Score)
         silhouette = silhouette_score(df_pca[features_for_clustering], predictions)
         st.subheader(f"Silhouette Score ({algorithm})")
