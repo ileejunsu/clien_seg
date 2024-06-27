@@ -10,10 +10,14 @@ from sklearn.preprocessing import StandardScaler
 from sklearn.decomposition import PCA
 from sklearn.metrics import silhouette_score
 import plotly.express as px
+import plotly.graph_objects as go
+from plotly.subplots import make_subplots
 from pyspark.sql import SparkSession
 from pyspark.sql.functions import col, datediff, to_date, lit, max
 import logging
 import sys
+from scipy import stats
+import numpy as np
 
 @st.cache_resource
 def setup_java():
@@ -100,7 +104,7 @@ def load_data():
     reference_date = df_features.agg(max("LastPurchasesDate")).collect()[0][0]
     reference_date_lit = lit(reference_date)
     df_features = df_features.withColumn("DaysSinceLastPurchase", datediff(to_date(reference_date_lit), "LastPurchasesDate"))
-    df_features = df_features.withColumn("DaysSinceFirstPurchase", datediff(to_date(reference_date_lit), "FirstPurchasesDate"))
+    df_features = df_features.withColumn("DaysSinceFirsoitPurchase", datediff(to_date(reference_date_lit), "FirstPurchasesDate"))
     df_features = df_features.drop("LastPurchasesDate", "FirstPurchasesDate")
     
     # Convert to Pandas DataFrame before returning
@@ -230,26 +234,41 @@ def main():
             center_df = center_df.round(2)
             st.dataframe(center_df, use_container_width=True)
 
-        # Scatter Plot Visualization
         st.subheader("Cluster Analysis")
-        
+
         if len(features_for_clustering) >= 2:
             st.info("This scatter plot shows how the data points are grouped into clusters. Each point represents a customer, and the color indicates the cluster. Clear separations between colors suggest well-defined clusters.")
-            
-            if apply_pca:
-                x_col, y_col = 'PC1', 'PC2'
-                x_label, y_label = 'First Principal Component', 'Second Principal Component'
-            else:
-                # Allow user to select which features to plot
-                x_col = st.selectbox("Select feature for X-axis:", features_for_clustering)
-                y_col = st.selectbox("Select feature for Y-axis:", 
-                                     [f for f in features_for_clustering if f != x_col])
-                x_label, y_label = x_col, y_col
-        
-            fig = px.scatter(df_pca, x=x_col, y=y_col, color=predictions, 
-                             labels={'color': 'Cluster'},
-                             title="Scatterplot of Clusters")
-            fig.update_layout(xaxis_title=x_label, yaxis_title=y_label)
+
+            col1, col2, col3 = st.columns([2, 1, 1])
+
+            with col1:
+                if apply_pca:
+                    x_col, y_col = 'PC1', 'PC2'
+                    x_label, y_label = 'First Principal Component', 'Second Principal Component'
+                else:
+                    x_col = features_for_clustering[0]
+                    y_col = features_for_clustering[1]
+                    x_label, y_label = x_col, y_col
+
+                fig = px.scatter(df_pca, x=x_col, y=y_col, color=predictions, 
+                                 labels={'color': 'Cluster'},
+                                 title="Scatterplot of Clusters")
+                fig.update_layout(xaxis_title=x_label, yaxis_title=y_label)
+
+            with col2:
+                st.write("X-axis")
+                x_col = st.selectbox("", features_for_clustering, key="x_axis")
+
+            with col3:
+                st.write("Y-axis")
+                y_col = st.selectbox("", [f for f in features_for_clustering if f != x_col], key="y_axis")
+
+            # Update the plot based on selection
+            if not apply_pca:
+                fig.update_traces(x=df_pca[x_col], y=df_pca[y_col])
+                fig.update_layout(xaxis_title=x_col, yaxis_title=y_col)
+
+            # Display the plot
             st.plotly_chart(fig, use_container_width=True)
         else:
             st.warning("Not enough features for a scatter plot. Please select at least two features.")
@@ -272,30 +291,111 @@ def main():
         
                 # Summary statistics
                 st.info("This table shows summary statistics for each feature within this cluster. Compare these values to other clusters to understand what makes this segment unique.")
-                cluster_stats = cluster_data[features_to_use].describe().transpose()
+               # Calculate summary statistics
+                cluster_stats = cluster_data[features_to_use].describe()
                 
-                # Round all numeric columns to 2 decimal places
-                cluster_stats = cluster_stats.round(1)
-                
+                # Replace NaN with 0 and round to integers
+                cluster_stats = cluster_stats.fillna(0).round(0).astype(int)
+
+
+                # Transpose the dataframe for display
+                cluster_stats = cluster_stats.transpose()
+
                 st.table(cluster_stats)
         
                 # Visualize distributions
+                # Inside your cluster tab loop:
                 st.write("Distribution of Features:")
-                st.info("These histograms show the distribution of each feature within this cluster. The shape of these distributions can reveal important characteristics of the cluster.")
-                for feature in features_to_use:
-                    fig = px.histogram(
-                        cluster_data,
-                        x=feature,
-                        nbins=20,
-                        title=f"{feature} Distribution (Cluster {cluster_id})"
+                st.info("Select features from the multiselect box to view their distributions within this cluster.")
+
+                # Create a multiselect box for feature selection with a unique key
+                
+                selected_features = st.multiselect(
+                    "Select features to display:",
+                    options=features_to_use,
+                    default=features_to_use,  # This sets all features as selected by default
+                    key=f"feature_select_{cluster_id}"
+                )
+
+                if selected_features:
+                    fig = go.Figure()
+                    single_value_features = []
+                
+                    for feature in selected_features:
+                        data = cluster_data[feature]
+                        
+                        if data.nunique() > 1:
+                            # Normalize the data
+                            data_norm = (data - data.min()) / (data.max() - data.min())
+                            
+                            # Calculate kernel density estimation
+                            kde = stats.gaussian_kde(data_norm)
+                            x_range = np.linspace(0, 1, 1000)
+                            y_kde = kde(x_range)
+                
+                            # Add line trace
+                            fig.add_trace(go.Scatter(
+                                x=x_range,
+                                y=y_kde,
+                                mode='lines',
+                                name=feature,
+                                line=dict(width=2)
+                            ))
+                        else:
+                            single_value_features.append(feature)
+                
+                    # Update layout for better readability
+                    fig.update_layout(
+                        title="Distribution of Selected Features (Normalized)",
+                        xaxis_title="Normalized Value",
+                        yaxis_title="Density",
+                        legend_title="Features",
+                        height=500,
+                        hovermode="x unified"
                     )
-                    st.plotly_chart(fig, use_container_width=True)
+                
+                    # Update axes to automatically zoom and fit the data
+                    fig.update_xaxes(range=[0, 1])
+                    fig.update_yaxes(title_text="Density")
+                
+                    # Display the plot only if there are traces
+                    if len(fig.data) > 0:
+                        st.plotly_chart(fig, use_container_width=True)
+                        st.info("Note: Feature values have been normalized to a 0-1 scale for comparison. The lines represent the probability density function for each feature.")
+                    
+                    # Handle features with single unique value
+                    if single_value_features:
+                        st.warning(f"The following features have only one unique value and cannot be plotted as distributions: {', '.join(single_value_features)}")
+                        
+                        # Create a bar chart for single-value features
+                        single_value_data = {f: cluster_data[f].iloc[0] for f in single_value_features}
+                        
+                        fig_single = go.Figure(data=[go.Bar(
+                            x=list(single_value_data.keys()),
+                            y=list(single_value_data.values()),
+                            text=list(single_value_data.values()),
+                            textposition='auto',
+                        )])
+                        
+                        fig_single.update_layout(
+                            title="Features with Single Unique Value",
+                            xaxis_title="Feature",
+                            yaxis_title="Value",
+                            height=400
+                        )
+                        
+                        st.plotly_chart(fig_single, use_container_width=True)
+                
+                else:
+                    st.warning("Please select at least one feature to display.")
+
 
         # Evaluate Clustering (Silhouette Score)
         silhouette = silhouette_score(df_pca[features_for_clustering], predictions)
         st.subheader(f"Silhouette Score ({algorithm})")
         st.info("The Silhouette Score measures how similar an object is to its own cluster compared to other clusters. Scores range from -1 to 1, where a high value indicates that the object is well matched to its own cluster and poorly matched to neighboring clusters.")
         st.metric("Score", round(silhouette, 3))
+        
 
     else:
         st.warning("Please select at least one feature for clustering.")
