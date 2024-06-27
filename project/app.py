@@ -230,26 +230,41 @@ def main():
             center_df = center_df.round(2)
             st.dataframe(center_df, use_container_width=True)
 
-        # Scatter Plot Visualization
         st.subheader("Cluster Analysis")
-        
+
         if len(features_for_clustering) >= 2:
             st.info("This scatter plot shows how the data points are grouped into clusters. Each point represents a customer, and the color indicates the cluster. Clear separations between colors suggest well-defined clusters.")
             
-            if apply_pca:
-                x_col, y_col = 'PC1', 'PC2'
-                x_label, y_label = 'First Principal Component', 'Second Principal Component'
-            else:
-                # Allow user to select which features to plot
-                x_col = st.selectbox("Select feature for X-axis:", features_for_clustering)
-                y_col = st.selectbox("Select feature for Y-axis:", 
-                                     [f for f in features_for_clustering if f != x_col])
-                x_label, y_label = x_col, y_col
+            col1, col2, col3 = st.columns([2, 1, 1])
+            
+            with col1:
+                if apply_pca:
+                    x_col, y_col = 'PC1', 'PC2'
+                    x_label, y_label = 'First Principal Component', 'Second Principal Component'
+                else:
+                    x_col = features_for_clustering[0]
+                    y_col = features_for_clustering[1]
+                    x_label, y_label = x_col, y_col
         
-            fig = px.scatter(df_pca, x=x_col, y=y_col, color=predictions, 
-                             labels={'color': 'Cluster'},
-                             title="Scatterplot of Clusters")
-            fig.update_layout(xaxis_title=x_label, yaxis_title=y_label)
+                fig = px.scatter(df_pca, x=x_col, y=y_col, color=predictions, 
+                                 labels={'color': 'Cluster'},
+                                 title="Scatterplot of Clusters")
+                fig.update_layout(xaxis_title=x_label, yaxis_title=y_label)
+        
+            with col2:
+                st.write("X-axis")
+                x_col = st.selectbox("", features_for_clustering, key="x_axis")
+        
+            with col3:
+                st.write("Y-axis")
+                y_col = st.selectbox("", [f for f in features_for_clustering if f != x_col], key="y_axis")
+        
+            # Update the plot based on selection
+            if not apply_pca:
+                fig.update_traces(x=df_pca[x_col], y=df_pca[y_col])
+                fig.update_layout(xaxis_title=x_col, yaxis_title=y_col)
+        
+            # Display the plot
             st.plotly_chart(fig, use_container_width=True)
         else:
             st.warning("Not enough features for a scatter plot. Please select at least two features.")
