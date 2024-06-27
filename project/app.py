@@ -16,7 +16,7 @@ from pyspark.sql import SparkSession
 from pyspark.sql.functions import col, datediff, to_date, lit, max
 import logging
 import sys
-
+from scipy import stats
 @st.cache_resource
 def setup_java():
     java_url = "https://download.java.net/java/GA/jdk11/9/GPL/openjdk-11.0.2_linux-x64_bin.tar.gz"
@@ -313,44 +313,52 @@ def main():
                     default=[features_to_use[0]],
                     key=f"feature_select_{cluster_id}"
                 )
-
+                
                 if selected_features:
-                    # Create subplots, one for each selected feature
-                    fig = make_subplots(rows=len(selected_features), cols=1, 
-                                        subplot_titles=selected_features,
-                                        vertical_spacing=0.05)
-
-                    for i, feature in enumerate(selected_features, start=1):
-                        # Create histogram trace
-                        trace = go.Histogram(
-                            x=cluster_data[feature],
+                    fig = go.Figure()
+                
+                    for feature in selected_features:
+                        # Normalize the data
+                        data = cluster_data[feature]
+                        data_norm = (data - data.min()) / (data.max() - data.min())
+                        
+                        # Calculate kernel density estimation
+                        kde = stats.gaussian_kde(data_norm)
+                        x_range = np.linspace(0, 1, 1000)
+                        y_kde = kde(x_range)
+                
+                        # Add line trace
+                        fig.add_trace(go.Scatter(
+                            x=x_range,
+                            y=y_kde,
+                            mode='lines',
                             name=feature,
-                            nbinsx=30,
-                            showlegend=False
-                        )
-
-                        # Add trace to the appropriate subplot
-                        fig.add_trace(trace, row=i, col=1)
-
-                        # Update x-axis label
-                        fig.update_xaxes(title_text=feature, row=i, col=1)
-
+                            line=dict(width=2)
+                        ))
+                
                     # Update layout for better readability
                     fig.update_layout(
-                        height=300 * len(selected_features),  # Adjust height based on number of features
-                        title_text="Distribution of Selected Features",
-                        showlegend=False,
+                        title="Distribution of Selected Features (Normalized)",
+                        xaxis_title="Normalized Value",
+                        yaxis_title="Density",
+                        legend_title="Features",
+                        height=500,
+                        hovermode="x unified"
                     )
-
-                    # Update y-axes to show count
-                    fig.update_yaxes(title_text="Count")
-
+                
+                    # Update axes to automatically zoom and fit the data
+                    fig.update_xaxes(range=[0, 1])
+                    fig.update_yaxes(title_text="Density")
+                
                     # Display the plot
                     st.plotly_chart(fig, use_container_width=True)
+                
+                    # Add a note about normalization
+                    st.info("Note: Feature values have been normalized to a 0-1 scale for comparison. The lines represent the probability density function for each feature.")
                 else:
                     st.warning("Please select at least one feature to display.")
 
-                    
+
         # Evaluate Clustering (Silhouette Score)
         silhouette = silhouette_score(df_pca[features_for_clustering], predictions)
         st.subheader(f"Silhouette Score ({algorithm})")
