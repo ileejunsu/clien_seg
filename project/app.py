@@ -395,6 +395,7 @@ def main():
         st.subheader(f"Silhouette Score ({algorithm})")
         st.info("The Silhouette Score measures how similar an object is to its own cluster compared to other clusters. Scores range from -1 to 1, where a high value indicates that the object is well matched to its own cluster and poorly matched to neighboring clusters.")
         st.metric("Score", round(silhouette, 3))
+        
 
     else:
         st.warning("Please select at least one feature for clustering.")
