@@ -112,6 +112,40 @@ def load_data():
 
 df_features = load_data()
 
+def plot_silhouette_score(silhouette, algorithm, k, df_pca, features_for_clustering):
+    """Displays the silhouette score as a metric and a plot for multiple k values."""
+    st.subheader(f"Silhouette Score ({algorithm})")
+    st.info(
+        "The Silhouette Score measures how similar an object is to its own cluster "
+        "compared to other clusters. Scores range from -1 to 1, where a high value "
+        "indicates that the object is well matched to its own cluster and poorly "
+        "matched to neighboring clusters."
+    )
+    st.metric("Score (for k={})".format(k), round(silhouette, 3)) 
+
+    # Calculate silhouette scores for multiple cluster counts (optional)
+    silhouette_scores = []
+    for i in range(2, 11):  # Adjust range as needed
+        if algorithm == "K-means":
+            model = KMeans(n_clusters=i, random_state=0, n_init="auto")
+        elif algorithm == "Bisecting K-Means":
+            model = BisectingKMeans(n_clusters=i, random_state=0)
+        # ... (add other algorithms as needed)
+
+        cluster_labels = model.fit_predict(df_pca[features_for_clustering])
+        silhouette_avg = silhouette_score(df_pca[features_for_clustering], cluster_labels)
+        silhouette_scores.append(silhouette_avg)
+
+    # Create the plot
+    fig = px.line(x=list(range(2, 11)), y=silhouette_scores, title="Silhouette Scores for Different Cluster Counts")
+    fig.update_traces(mode='markers+lines')  # Show both markers and a line
+    fig.update_layout(
+        xaxis_title="Number of Clusters (k)", 
+        yaxis_title="Silhouette Score",
+        xaxis=dict(tickmode='linear', tick0=2, dtick=1)  # Force integer ticks starting from 2
+    )
+    st.plotly_chart(fig)  
+
 def main():
     st.title("Interactive Customer Segmentation")
 
@@ -392,10 +426,7 @@ def main():
 
         # Evaluate Clustering (Silhouette Score)
         silhouette = silhouette_score(df_pca[features_for_clustering], predictions)
-        st.subheader(f"Silhouette Score ({algorithm})")
-        st.info("The Silhouette Score measures how similar an object is to its own cluster compared to other clusters. Scores range from -1 to 1, where a high value indicates that the object is well matched to its own cluster and poorly matched to neighboring clusters.")
-        st.metric("Score", round(silhouette, 3))
-        
+        plot_silhouette_score(silhouette, algorithm, k, df_pca, features_for_clustering)
 
     else:
         st.warning("Please select at least one feature for clustering.")
