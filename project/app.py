@@ -17,6 +17,8 @@ from pyspark.sql.functions import col, datediff, to_date, lit, max
 import logging
 import sys
 from scipy import stats
+import numpy as np
+
 @st.cache_resource
 def setup_java():
     java_url = "https://download.java.net/java/GA/jdk11/9/GPL/openjdk-11.0.2_linux-x64_bin.tar.gz"
@@ -313,20 +315,20 @@ def main():
                     default=[features_to_use[0]],
                     key=f"feature_select_{cluster_id}"
                 )
-                
+
                 if selected_features:
                     fig = go.Figure()
-                
+
                     for feature in selected_features:
                         # Normalize the data
                         data = cluster_data[feature]
                         data_norm = (data - data.min()) / (data.max() - data.min())
-                        
+
                         # Calculate kernel density estimation
                         kde = stats.gaussian_kde(data_norm)
                         x_range = np.linspace(0, 1, 1000)
                         y_kde = kde(x_range)
-                
+
                         # Add line trace
                         fig.add_trace(go.Scatter(
                             x=x_range,
@@ -335,7 +337,7 @@ def main():
                             name=feature,
                             line=dict(width=2)
                         ))
-                
+
                     # Update layout for better readability
                     fig.update_layout(
                         title="Distribution of Selected Features (Normalized)",
@@ -345,14 +347,14 @@ def main():
                         height=500,
                         hovermode="x unified"
                     )
-                
+
                     # Update axes to automatically zoom and fit the data
                     fig.update_xaxes(range=[0, 1])
                     fig.update_yaxes(title_text="Density")
-                
+
                     # Display the plot
                     st.plotly_chart(fig, use_container_width=True)
-                
+
                     # Add a note about normalization
                     st.info("Note: Feature values have been normalized to a 0-1 scale for comparison. The lines represent the probability density function for each feature.")
                 else:
