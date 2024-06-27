@@ -408,6 +408,8 @@ def main():
                     st.warning("Please select at least one feature to display.")
 
 
+        # Evaluate Clustering (Silhouette Score)
+        silhouette = silhouette_score(df_pca[features_for_clustering], predictions)
         # **Pass algorithm to the plot_silhouette_score function**
         plot_silhouette_score(silhouette, algorithm)
 
@@ -420,7 +422,6 @@ def main():
             labels={'color': 'Cluster'}
         )
         st.plotly_chart(fig)
-
     else:
         st.warning("Please select at least one feature for clustering.")
 
