@@ -112,48 +112,23 @@ def load_data():
 
 df_features = load_data()
 
-def plot_silhouette_score(score):
-    # Define color based on score
-    if score < 0.2:
-        color = "red"
-        interpretation = "Poor clustering"
-    elif score < 0.5:
-        color = "orange"
-        interpretation = "Average clustering"
-    else:
-        color = "green"
-        interpretation = "Good clustering"
-
-    # Create gauge chart
-    fig = go.Figure(go.Indicator(
-        mode = "gauge+number",
-        value = score,
-        domain = {'x': [0, 1], 'y': [0, 1]},
-        title = {'text': f"Silhouette Score ({algorithm})", 'font': {'size': 24}},
-        gauge = {
-            'axis': {'range': [-1, 1], 'tickwidth': 1, 'tickcolor': "darkblue"},
-            'bar': {'color': color},
-            'bgcolor': "white",
-            'borderwidth': 2,
-            'bordercolor': "gray",
-            'steps': [
-                {'range': [-1, 0.2], 'color': 'lightpink'},
-                {'range': [0.2, 0.5], 'color': 'lightyellow'},
-                {'range': [0.5, 1], 'color': 'lightgreen'}],
-            'threshold': {
-                'line': {'color': "red", 'width': 4},
-                'thickness': 0.75,
-                'value': score}}))
-
-    fig.update_layout(height=300, margin=dict(l=10, r=10, t=50, b=10))
-    
-    st.plotly_chart(fig, use_container_width=True)
-    
-    st.info(f"Interpretation: {interpretation}")
-    st.write("The Silhouette Score ranges from -1 to 1:")
-    st.write("- Scores near 1 indicate well-separated clusters.")
-    st.write("- Scores near 0 indicate overlapping clusters.")
-    st.write("- Negative scores indicate that samples might be in the wrong cluster.")
+def plot_silhouette_score(silhouette, algorithm):
+    """Function to plot the silhouette score."""
+    fig = go.Figure(
+        data=[
+            go.Bar(
+                x=list(range(2, len(silhouette) + 2)),
+                y=silhouette,
+                marker=dict(color="rgba(50, 171, 96, 0.6)"),
+            )
+        ],
+        layout=go.Layout(
+            title={'text': f"Silhouette Score ({algorithm})", 'font': {'size': 24}},
+            xaxis=dict(title="Number of Clusters"),
+            yaxis=dict(title="Silhouette Score"),
+        ),
+    )
+    st.plotly_chart(fig)
 
 
 def main():
@@ -433,10 +408,18 @@ def main():
                     st.warning("Please select at least one feature to display.")
 
 
-        # Evaluate Clustering (Silhouette Score)
-        silhouette = silhouette_score(df_pca[features_for_clustering], predictions)
-        st.subheader(f"Clustering Quality Assessment")
-        plot_silhouette_score(silhouette)
+        # **Pass algorithm to the plot_silhouette_score function**
+        plot_silhouette_score(silhouette, algorithm)
+
+        # Display scatter plot for first two PCA components
+        st.subheader("PCA Scatter Plot")
+        st.info("This scatter plot visualizes the first two principal components of the feature space. Each point represents a customer, and the color indicates the cluster assignment.")
+        fig = px.scatter(
+            df_pca, x="PC1", y="PC2", color=df_segmented['prediction'].astype(str),
+            title="Clusters Visualization",
+            labels={'color': 'Cluster'}
+        )
+        st.plotly_chart(fig)
 
     else:
         st.warning("Please select at least one feature for clustering.")
