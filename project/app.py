@@ -342,24 +342,6 @@ def main():
                 st.write("Distribution of Features:")
                 st.info("Select features from the multiselect box to view their distributions within this cluster.")
 
-                # Custom CSS Styling
-                st.markdown(
-                    """
-                    <style>
-                    .stMultiSelect [data-baseweb="tag"] {
-                        background-color: #b6d7a8;  /* Light Green */
-                        color: #000000;
-                    }
-                    
-                    /* Compact the multiselect box (optional) */
-                    .stMultiSelect {
-                        margin-bottom: -10px;  /* Adjust as needed */
-                    }
-                    </style>
-                    """,
-                    unsafe_allow_html=True,
-                )
-
                 # Create a multiselect box for feature selection with a unique key
                 selected_features = st.multiselect(
                     "Select features to display:",
