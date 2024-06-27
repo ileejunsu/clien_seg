@@ -311,8 +311,8 @@ def main():
                 # Create a multiselect box for feature selection with a unique key
                 selected_features = st.multiselect(
                     "Select features to display:",
-                    features_to_use,
-                    default=[features_to_use[0]],
+                    options=features_to_use,
+                    default=features_to_use,  # This sets all features as selected by default
                     key=f"feature_select_{cluster_id}"
                 )
 
