@@ -112,6 +112,50 @@ def load_data():
 
 df_features = load_data()
 
+def plot_silhouette_score(score):
+    # Define color based on score
+    if score < 0.2:
+        color = "red"
+        interpretation = "Poor clustering"
+    elif score < 0.5:
+        color = "orange"
+        interpretation = "Average clustering"
+    else:
+        color = "green"
+        interpretation = "Good clustering"
+
+    # Create gauge chart
+    fig = go.Figure(go.Indicator(
+        mode = "gauge+number",
+        value = score,
+        domain = {'x': [0, 1], 'y': [0, 1]},
+        title = {'text': f"Silhouette Score ({algorithm})", 'font': {'size': 24}},
+        gauge = {
+            'axis': {'range': [-1, 1], 'tickwidth': 1, 'tickcolor': "darkblue"},
+            'bar': {'color': color},
+            'bgcolor': "white",
+            'borderwidth': 2,
+            'bordercolor': "gray",
+            'steps': [
+                {'range': [-1, 0.2], 'color': 'lightpink'},
+                {'range': [0.2, 0.5], 'color': 'lightyellow'},
+                {'range': [0.5, 1], 'color': 'lightgreen'}],
+            'threshold': {
+                'line': {'color': "red", 'width': 4},
+                'thickness': 0.75,
+                'value': score}}))
+
+    fig.update_layout(height=300, margin=dict(l=10, r=10, t=50, b=10))
+    
+    st.plotly_chart(fig, use_container_width=True)
+    
+    st.info(f"Interpretation: {interpretation}")
+    st.write("The Silhouette Score ranges from -1 to 1:")
+    st.write("- Scores near 1 indicate well-separated clusters.")
+    st.write("- Scores near 0 indicate overlapping clusters.")
+    st.write("- Negative scores indicate that samples might be in the wrong cluster.")
+
+
 def main():
     st.title("Interactive Customer Segmentation")
 
@@ -391,9 +435,8 @@ def main():
 
         # Evaluate Clustering (Silhouette Score)
         silhouette = silhouette_score(df_pca[features_for_clustering], predictions)
-        st.subheader(f"Silhouette Score ({algorithm})")
-        st.info("The Silhouette Score measures how similar an object is to its own cluster compared to other clusters. Scores range from -1 to 1, where a high value indicates that the object is well matched to its own cluster and poorly matched to neighboring clusters.")
-        st.metric("Score", round(silhouette, 3))
+        st.subheader(f"Clustering Quality Assessment")
+        plot_silhouette_score(silhouette)
 
     else:
         st.warning("Please select at least one feature for clustering.")
