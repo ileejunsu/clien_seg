@@ -318,12 +318,13 @@ def main():
 
                 if selected_features:
                     fig = go.Figure()
+                    single_value_features = []
                 
                     for feature in selected_features:
-                        # Normalize the data
                         data = cluster_data[feature]
                         
                         if data.nunique() > 1:
+                            # Normalize the data
                             data_norm = (data - data.min()) / (data.max() - data.min())
                             
                             # Calculate kernel density estimation
@@ -340,7 +341,7 @@ def main():
                                 line=dict(width=2)
                             ))
                         else:
-                            st.warning(f"Feature '{feature}' has only one unique value and cannot be plotted.")
+                            single_value_features.append(feature)
                 
                     # Update layout for better readability
                     fig.update_layout(
@@ -360,8 +361,30 @@ def main():
                     if len(fig.data) > 0:
                         st.plotly_chart(fig, use_container_width=True)
                         st.info("Note: Feature values have been normalized to a 0-1 scale for comparison. The lines represent the probability density function for each feature.")
-                    else:
-                        st.warning("No features could be plotted. All selected features have only one unique value.")
+                    
+                    # Handle features with single unique value
+                    if single_value_features:
+                        st.warning(f"The following features have only one unique value and cannot be plotted as distributions: {', '.join(single_value_features)}")
+                        
+                        # Create a bar chart for single-value features
+                        single_value_data = {f: cluster_data[f].iloc[0] for f in single_value_features}
+                        
+                        fig_single = go.Figure(data=[go.Bar(
+                            x=list(single_value_data.keys()),
+                            y=list(single_value_data.values()),
+                            text=list(single_value_data.values()),
+                            textposition='auto',
+                        )])
+                        
+                        fig_single.update_layout(
+                            title="Features with Single Unique Value",
+                            xaxis_title="Feature",
+                            yaxis_title="Value",
+                            height=400
+                        )
+                        
+                        st.plotly_chart(fig_single, use_container_width=True)
+                
                 else:
                     st.warning("Please select at least one feature to display.")
 
