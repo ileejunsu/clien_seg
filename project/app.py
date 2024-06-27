@@ -112,25 +112,6 @@ def load_data():
 
 df_features = load_data()
 
-def plot_silhouette_score(silhouette, algorithm):
-    """Function to plot the silhouette score."""
-    fig = go.Figure(
-        data=[
-            go.Bar(
-                x=list(range(2, len(silhouette) + 2)),
-                y=silhouette,
-                marker=dict(color="rgba(50, 171, 96, 0.6)"),
-            )
-        ],
-        layout=go.Layout(
-            title={'text': f"Silhouette Score ({algorithm})", 'font': {'size': 24}},
-            xaxis=dict(title="Number of Clusters"),
-            yaxis=dict(title="Silhouette Score"),
-        ),
-    )
-    st.plotly_chart(fig)
-
-
 def main():
     st.title("Interactive Customer Segmentation")
 
@@ -328,6 +309,7 @@ def main():
                 st.info("Select features from the multiselect box to view their distributions within this cluster.")
 
                 # Create a multiselect box for feature selection with a unique key
+                
                 selected_features = st.multiselect(
                     "Select features to display:",
                     options=features_to_use,
@@ -410,18 +392,10 @@ def main():
 
         # Evaluate Clustering (Silhouette Score)
         silhouette = silhouette_score(df_pca[features_for_clustering], predictions)
-        # **Pass algorithm to the plot_silhouette_score function**
-        plot_silhouette_score(silhouette, algorithm)
+        st.subheader(f"Silhouette Score ({algorithm})")
+        st.info("The Silhouette Score measures how similar an object is to its own cluster compared to other clusters. Scores range from -1 to 1, where a high value indicates that the object is well matched to its own cluster and poorly matched to neighboring clusters.")
+        st.metric("Score", round(silhouette, 3))
 
-        # Display scatter plot for first two PCA components
-        st.subheader("PCA Scatter Plot")
-        st.info("This scatter plot visualizes the first two principal components of the feature space. Each point represents a customer, and the color indicates the cluster assignment.")
-        fig = px.scatter(
-            df_pca, x="PC1", y="PC2", color=df_segmented['prediction'].astype(str),
-            title="Clusters Visualization",
-            labels={'color': 'Cluster'}
-        )
-        st.plotly_chart(fig)
     else:
         st.warning("Please select at least one feature for clustering.")
 
