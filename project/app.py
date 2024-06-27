@@ -119,7 +119,7 @@ def plot_silhouette_score(silhouette, algorithm, k, df_pca, features_for_cluster
         "compared to other clusters. Scores range from -1 to 1, where a high value "
         "indicates that the object is well matched to its own cluster and poorly "
         "matched to neighboring clusters. \n"
-        "The blue line represents the 'average silhouette score' for that particular number of cluster.\n\n"
+        "**The blue line represents the 'average silhouette score' for that particular number of cluster.**\n\n"
         f"**Current Silhouette Score (for k={k}): {silhouette:.3f}**"
     )
     st.subheader(f"Silhouette Score ({algorithm})")
