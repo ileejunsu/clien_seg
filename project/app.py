@@ -113,32 +113,35 @@ def load_data():
 df_features = load_data()
 
 def plot_silhouette_score(silhouette, algorithm, k, df_pca, features_for_clustering):
-    """
-    Displays the silhouette score as a metric and a plot with a red dot for the current k.
-
-    This function calculates silhouette scores for multiple cluster numbers (k)
-    and displays them in a line plot. It highlights the score for the current k value.
-    """
-    st.subheader(f"Silhouette Score ({algorithm})")
-    st.info(
+    # Explanation text with the current silhouette score
+    explanation = (
         "The Silhouette Score measures how similar an object is to its own cluster "
         "compared to other clusters. Scores range from -1 to 1, where a high value "
         "indicates that the object is well matched to its own cluster and poorly "
-        "matched to neighboring clusters."
+        "matched to neighboring clusters. \n\n"
+        f"**Current Silhouette Score (for k={k}): {silhouette:.3f}**"
     )
+    st.subheader(f"Silhouette Score ({algorithm})")
+    st.info(explanation)
 
-    # Calculate silhouette scores for multiple cluster counts 
+    # Calculate silhouette scores for multiple cluster counts (optional)
     silhouette_scores = []
-    for i in range(2, 11):  # Adjust range as needed
+    for i in range(2, 11):  
         if algorithm == "K-means":
             model = KMeans(n_clusters=i, random_state=0, n_init="auto")
         elif algorithm == "Bisecting K-Means":
             model = BisectingKMeans(n_clusters=i, random_state=0)
-        # ... (add other algorithms as needed)
+        elif algorithm == "Gaussian Mixture":
+            model = GaussianMixture(n_components=i, random_state=0)
+        else:
+            raise ValueError(f"Unsupported algorithm: {algorithm}") 
+            
+        # Fit and predict for the current model
+        model.fit(df_pca[features_for_clustering])
+        cluster_labels = model.predict(df_pca[features_for_clustering]) 
 
-        cluster_labels = model.fit_predict(df_pca[features_for_clustering])
         silhouette_avg = silhouette_score(df_pca[features_for_clustering], cluster_labels)
-        silhouette_scores.append(silhouette_avg)
+        silhouette_scores.append(silhouette_avg)  
 
     # Create the plot
     fig = px.line(
@@ -148,31 +151,33 @@ def plot_silhouette_score(silhouette, algorithm, k, df_pca, features_for_cluster
         labels={"x": "Number of Clusters (k)", "y": "Silhouette Score"}
     )
 
-    # Add red dot and annotation for current k
+    # Add red dot for current k (without legend entry)
     fig.add_trace(
         go.Scatter(
             x=[k],
             y=[silhouette],
             mode='markers',
             marker=dict(color='red', size=10),
-            name=f"Current Score (k={k})"
+            showlegend=False  # Hide this trace from the legend
         )
     )
     fig.update_traces(marker=dict(size=8))  # Adjust the size of all markers
+    
+    # Add annotation for current k
     fig.add_annotation(
         x=k,
         y=silhouette,
-        text=f"Current Score: {silhouette:.3f}",  # Format score to 3 decimal places
+        text=f"Current Score: {silhouette:.3f}",
         showarrow=True,
         arrowhead=1,
-        ax=-20,  # Adjust annotation arrow length
+        ax=-20,
         ay=-20
     )
 
     fig.update_layout(
         xaxis=dict(tickmode='linear', tick0=2, dtick=1),  # Ensure integer ticks on x-axis
-        legend=dict(yanchor="top", y=0.99, xanchor="left", x=0.01)  # Position legend
     )
+
     st.plotly_chart(fig, use_container_width=True)  # Display the plot
 
 def main():
