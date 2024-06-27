@@ -287,11 +287,11 @@ def main():
         
                 # Summary statistics
                 st.info("This table shows summary statistics for each feature within this cluster. Compare these values to other clusters to understand what makes this segment unique.")
-                # Calculate summary statistics and round all values
-                cluster_stats = cluster_data[features_to_use].describe().round(2)
+                # Calculate summary statistics
+                cluster_stats = cluster_data[features_to_use].describe()
                 
-                # For the 'count' row, we want to keep it as integers
-                cluster_stats.loc['count'] = cluster_stats.loc['count'].astype(int)
+                # Round all values to integers
+                cluster_stats = cluster_stats.round(0).astype(int)
                 
                 # Transpose the dataframe for display
                 cluster_stats = cluster_stats.transpose()
